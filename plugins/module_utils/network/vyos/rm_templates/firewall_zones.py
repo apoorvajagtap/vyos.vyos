@@ -19,6 +19,16 @@ from ansible_collections.ansible.netcommon.plugins.module_utils.network.common.n
     NetworkTemplate,
 )
 
+
+#def _tmplt_zone_policy_interface(config_data):
+
+def _tmplt_set_interfaces(config_data):
+    command = (
+        "set zone-policy zone"
+        + " { name } ".format(**config_data)
+        + "interface {name}".format(**config_data["interfaces"])
+    )
+
 class Firewall_zonesTemplate(NetworkTemplate):
     def __init__(self, lines=None):
         super(Firewall_zonesTemplate, self).__init__(lines=lines, tmplt=self)
@@ -26,24 +36,87 @@ class Firewall_zonesTemplate(NetworkTemplate):
     # fmt: off
     PARSERS = [
         {
-            "name": "key_a",
+            "name": "interfaces",
             "getval": re.compile(
                 r"""
-                ^key_a\s(?P<key_a>\S+)
-                $""", re.VERBOSE),
-            "setval": "",
+                ^set
+                \s+zone-policy
+                \s+zone
+                \s+(?P<name>\S+)
+                \s+interface
+                \s+(?P<interfaces>\S+)
+                *$""",
+                re.VERBOSE,
+            ),
+            "setval": _tmplt_set_interfaces, #"set zone-policy zone {{ name }} interface {{ name }}",
             "result": {
+                "{{ name }}": {
+                    "name": "{{ name }}",
+                    "interfaces": "{{ interfaces }}",
+                }
             },
             "shared": True
         },
         {
-            "name": "key_b",
+            "name": "description",
             "getval": re.compile(
                 r"""
-                \s+key_b\s(?P<key_b>\S+)
-                $""", re.VERBOSE),
-            "setval": "",
+                ^set
+                \s+zone-policy
+                \s+zone
+                \s+(?P<name>\S+)
+                \s+description
+                \s+(?P<description>\S+)
+                *$""",
+                re.VERBOSE,
+            ),
+            "setval": "set zone-policy zone {{ name }} description '{{description}}'",
             "result": {
+                "{{ name }}":{
+                    "name": "{{ name }}",
+                    "description": "{{ description }}",
+                }
+            },
+        },
+        {
+            "name": "default_action",
+            "getval": re.compile(
+                r"""
+                ^set
+                \s+zone-policy
+                \s+zone
+                \s+(?P<name>\S+)
+                \s+default-action
+                \s+(?P<default_action>\S+)
+                *$""",
+                re.VERBOSE,
+            ),
+            "setval": "set zone-policy zone {{ name }} default-action '{{default_action}}'",
+            "result": {
+                "{{ name }}": {
+                    "name": "{{ name }}",
+                    "default_action": "{{ default_action }}",
+                }
+            },
+        },
+        {
+            "name": "local_zone",
+            "getval": re.compile(
+                r"""
+                ^set
+                \s+zone-policy
+                \s+zone
+                \s+(?P<name>\S+)
+                \s+(?P<local_zone>\'local-zone\')
+                *$""",
+                re.VERBOSE,
+            ),
+            "setval": "set zone-policy zone {{ name }} local-zone",
+            "result": {
+                "{{ name }}": {
+                    "name": "{{ name }}",
+                    "local_zone": "{{ True if local_zone is defined }}"
+                }
             },
         },
     ]

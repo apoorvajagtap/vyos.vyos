@@ -48,6 +48,10 @@ class Firewall_zones(ResourceModule):
             tmplt=Firewall_zonesTemplate(),
         )
         self.parsers = [
+            "interfaces",
+            "description",
+            "default_action",
+            "local_zone",
         ]
 
     def execute_module(self):

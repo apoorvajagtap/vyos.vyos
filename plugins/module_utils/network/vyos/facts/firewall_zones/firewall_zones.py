@@ -59,7 +59,7 @@ class Firewall_zonesFacts(object):
         objs = []
 
         if not data:
-            data = connection.get()
+            data = connection.get("show configuration commands | match zone-policy")
 
         # parse native config using the Firewall_zones template
         firewall_zones_parser = Firewall_zonesTemplate(lines=data.splitlines())
