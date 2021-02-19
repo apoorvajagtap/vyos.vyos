@@ -20,14 +20,13 @@ from ansible_collections.ansible.netcommon.plugins.module_utils.network.common.n
 )
 
 
-#def _tmplt_zone_policy_interface(config_data):
-
 def _tmplt_set_interfaces(config_data):
     command = (
         "set zone-policy zone"
-        + " { name } ".format(**config_data)
-        + "interface {name}".format(**config_data["interfaces"])
+        + " {name} ".format(**config_data)
+        + "interface {name}".format(**config_data["interfaces"][-1])
     )
+    return command
 
 class Firewall_zonesTemplate(NetworkTemplate):
     def __init__(self, lines=None):
@@ -55,7 +54,7 @@ class Firewall_zonesTemplate(NetworkTemplate):
                     "interfaces": "{{ interfaces }}",
                 }
             },
-            "shared": True
+            #"shared": True
         },
         {
             "name": "description",
@@ -99,25 +98,25 @@ class Firewall_zonesTemplate(NetworkTemplate):
                 }
             },
         },
-        {
-            "name": "local_zone",
-            "getval": re.compile(
-                r"""
-                ^set
-                \s+zone-policy
-                \s+zone
-                \s+(?P<name>\S+)
-                \s+(?P<local_zone>\'local-zone\')
-                *$""",
-                re.VERBOSE,
-            ),
-            "setval": "set zone-policy zone {{ name }} local-zone",
-            "result": {
-                "{{ name }}": {
-                    "name": "{{ name }}",
-                    "local_zone": "{{ True if local_zone is defined }}"
-                }
-            },
-        },
+        # {
+        #     "name": "local_zone",
+        #     "getval": re.compile(
+        #         r"""
+        #         ^set
+        #         \s+zone-policy
+        #         \s+zone
+        #         \s+(?P<name>\S+)
+        #         \s+(?P<local_zone>\'local-zone\')
+        #         *$""",
+        #         re.VERBOSE,
+        #     ),
+        #     "setval": "set zone-policy zone {{ name }} local-zone",
+        #     "result": {
+        #         "{{ name }}": {
+        #             "name": "{{ name }}",
+        #             "local_zone": "{{ True if local_zone is defined }}"
+        #         }
+        #     },
+        # },
     ]
     # fmt: on

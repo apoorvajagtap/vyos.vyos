@@ -51,7 +51,7 @@ class Firewall_zones(ResourceModule):
             "interfaces",
             "description",
             "default_action",
-            "local_zone",
+            #"local_zone",
         ]
 
     def execute_module(self):
