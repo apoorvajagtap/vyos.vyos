@@ -21,6 +21,7 @@ from ansible_collections.ansible.netcommon.plugins.module_utils.network.common.n
 
 
 def _tmplt_set_interfaces(config_data):
+
     command = (
         "set zone-policy zone"
         + " {name} ".format(**config_data)
@@ -54,7 +55,7 @@ class Firewall_zonesTemplate(NetworkTemplate):
                     "interfaces": "{{ interfaces }}",
                 }
             },
-            #"shared": True
+            "shared": True
         },
         {
             "name": "description",
@@ -98,6 +99,45 @@ class Firewall_zonesTemplate(NetworkTemplate):
                 }
             },
         },
+        # {
+        #     "name": "local_zone",
+        #     "getval": re.compile(
+        #         r"""
+        #         ^set
+        #         \s+zone-policy
+        #         \s+zone
+        #         \s+(?P<name>\S+)
+        #         \s+(?P<local_zone>\'local-zone\')
+        #         *$""",
+        #         re.VERBOSE,
+        #     ),
+        #     "setval": "set zone-policy zone {{ name }} local-zone",
+        #     "result": {
+        #         "{{ name }}": {
+        #             "name": "{{ name }}",
+        #             "local_zone": "{{ True if local_zone is defined }}"
+        #         }
+        #     },
+        # },
+        # {
+        #     "name": "from",
+        #     "getval": re.compile(
+        #         r"""
+        #         ^set
+        #         \s+zone-policy
+        #         \s+zone
+        #         \s+(?P<name>\S+)
+        #         \s+from
+        #         \s+(?P<from_name>\S+)
+        #         \s+firewall
+        #         \s+(?P<afi>name|ipv6-name)
+        #         \s+(?P<v4_rule_set>)
+        #         \s+(?P<v6_rule_set>)
+        #         *$""",
+        #         re.VERBOSE,
+        #     ),
+        #     "setval": _tmplt_configure_trafic_from,
+        # }
         # {
         #     "name": "local_zone",
         #     "getval": re.compile(
