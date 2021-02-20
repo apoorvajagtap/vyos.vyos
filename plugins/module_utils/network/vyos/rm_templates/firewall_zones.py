@@ -19,15 +19,17 @@ from ansible_collections.ansible.netcommon.plugins.module_utils.network.common.n
     NetworkTemplate,
 )
 
-
 def _tmplt_set_interfaces(config_data):
-
-    command = (
-        "set zone-policy zone"
-        + " {name} ".format(**config_data)
-        + "interface {name}".format(**config_data["interfaces"][-1])
-    )
-    return command
+    cmd_list = []
+    for i in config_data["interfaces"]:
+        key, val = list(i.items())[0]
+        command = (
+            "set zone-policy zone"
+            + " {name} ".format(**config_data)
+            + "interface {name}".format(name=val)
+        )
+        cmd_list.append(command)
+    return cmd_list
 
 class Firewall_zonesTemplate(NetworkTemplate):
     def __init__(self, lines=None):
@@ -48,7 +50,7 @@ class Firewall_zonesTemplate(NetworkTemplate):
                 *$""",
                 re.VERBOSE,
             ),
-            "setval": _tmplt_set_interfaces, #"set zone-policy zone {{ name }} interface {{ name }}",
+            "setval": _tmplt_set_interfaces,
             "result": {
                 "{{ name }}": {
                     "name": "{{ name }}",
