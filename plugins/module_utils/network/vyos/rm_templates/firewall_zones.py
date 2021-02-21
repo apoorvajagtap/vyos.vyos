@@ -19,6 +19,13 @@ from ansible_collections.ansible.netcommon.plugins.module_utils.network.common.n
     NetworkTemplate,
 )
 
+def _get_parameters(data):
+    if data["afi"] == 'ipv6':
+        val = 'ipv6-name'
+    else:
+        val = 'name'
+    return val
+
 def _tmplt_set_interfaces(config_data):
     cmd_list = []
     for i in config_data["interfaces"]:
@@ -27,6 +34,20 @@ def _tmplt_set_interfaces(config_data):
             "set zone-policy zone"
             + " {name} ".format(**config_data)
             + "interface {name}".format(name=val)
+        )
+        cmd_list.append(command)
+    return cmd_list
+
+def _tmplt_configure_from(config_data):
+    cmd_list = []
+    for i in config_data["from"]:
+        afi_val = _get_parameters(i)
+        command = (
+            "set zone-policy zone"
+            + " {name} ".format(**config_data)
+            + "from {from_zone} ".format(from_zone=i["from_zone"])
+            + "firewall {firewall_afi} ".format(firewall_afi=afi_val)
+            + "{rule_set_name}".format(rule_set_name=i["rule_set_name"])
         )
         cmd_list.append(command)
     return cmd_list
@@ -54,7 +75,7 @@ class Firewall_zonesTemplate(NetworkTemplate):
             "result": {
                 "{{ name }}": {
                     "name": "{{ name }}",
-                    "interfaces": "{{ interfaces }}",
+                    "name": "{{ interfaces }}",
                 }
             },
             "shared": True
@@ -101,45 +122,35 @@ class Firewall_zonesTemplate(NetworkTemplate):
                 }
             },
         },
-        # {
-        #     "name": "local_zone",
-        #     "getval": re.compile(
-        #         r"""
-        #         ^set
-        #         \s+zone-policy
-        #         \s+zone
-        #         \s+(?P<name>\S+)
-        #         \s+(?P<local_zone>\'local-zone\')
-        #         *$""",
-        #         re.VERBOSE,
-        #     ),
-        #     "setval": "set zone-policy zone {{ name }} local-zone",
-        #     "result": {
-        #         "{{ name }}": {
-        #             "name": "{{ name }}",
-        #             "local_zone": "{{ True if local_zone is defined }}"
-        #         }
-        #     },
-        # },
-        # {
-        #     "name": "from",
-        #     "getval": re.compile(
-        #         r"""
-        #         ^set
-        #         \s+zone-policy
-        #         \s+zone
-        #         \s+(?P<name>\S+)
-        #         \s+from
-        #         \s+(?P<from_name>\S+)
-        #         \s+firewall
-        #         \s+(?P<afi>name|ipv6-name)
-        #         \s+(?P<v4_rule_set>)
-        #         \s+(?P<v6_rule_set>)
-        #         *$""",
-        #         re.VERBOSE,
-        #     ),
-        #     "setval": _tmplt_configure_trafic_from,
-        # }
+        {
+            "name": "from",
+            "getval": re.compile(
+                r"""
+                ^set
+                \s+zone-policy
+                \s+zone
+                \s+(?P<name>\S+)
+                \s+from
+                \s+(?P<from_zone>\S+)from_name
+                \s+firewall
+                \s+(?P<afi>name|ipv6-name)
+                \s+(?P<rule_set_name>)
+                *$""",
+                re.VERBOSE,
+            ),
+            "setval": _tmplt_configure_from,
+            "result": {
+                "{{ name }}": {
+                    "name": "{{ name }}",
+                    "from": {
+                        "firewall": {
+                            "version": "{{ afi }}",
+                            "rule_set_name": "{{ rule_set_name }}"
+                        }
+                    }
+                }
+            },
+        }
         # {
         #     "name": "local_zone",
         #     "getval": re.compile(

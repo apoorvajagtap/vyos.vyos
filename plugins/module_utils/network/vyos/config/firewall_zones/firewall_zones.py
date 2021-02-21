@@ -51,6 +51,7 @@ class Firewall_zones(ResourceModule):
             "interfaces",
             "description",
             "default_action",
+            "from",
             #"local_zone",
         ]
 

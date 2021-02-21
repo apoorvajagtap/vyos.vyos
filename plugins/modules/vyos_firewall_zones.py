@@ -46,29 +46,26 @@ options:
         type: list
         elements: dict
         suboptions:
-          name:
+          from_zone:
             description:
               - Zone from which to filter traffic.
             type: str
             required: True
-          firewall:
+          afi:
             description:
-              - Firewall options.
-            type: dict              
-            elements: dict
-            suboptions:
-              v4_rule_set: 
-                description: 
-                  - Specify the ipv4 rule set name.
-                type: str
-              v6_rule_set: 
-                description:
-                  - Specify the ipv6 rule set name.
-                type: str
+              - Address Family Identifier (AFI) for firewall options.
+            type: str
+            choices: ['ipv4', 'ipv6']
+            required: True
+          rule_set_name:
+            description:
+              - Firewall ruleset.
+            type: str
+            required: True 
       interfaces:
         description:
           - Interface associated with zone.
-        type: dict
+        type: list
         suboptions:
           name:
             description:
