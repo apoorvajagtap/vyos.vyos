@@ -38,6 +38,18 @@ def _tmplt_set_interfaces(config_data):
         cmd_list.append(command)
     return cmd_list
 
+def _tmplt_delete_interfaces(config_data):
+    delete_cmd_list = []
+    for i in config_data["interfaces"]:
+        key, val = list(i.items())[0]
+        command = (
+            "delete zone-policy zone"
+            + " {name} ".format(**config_data)
+            + "interface {name}".format(name=val)
+        )
+        delete_cmd_list.append(command)
+    return delete_cmd_list
+
 def _tmplt_configure_from(config_data):
     cmd_list = []
     for i in config_data["from"]:
@@ -51,6 +63,13 @@ def _tmplt_configure_from(config_data):
         )
         cmd_list.append(command)
     return cmd_list
+
+def _tmplt_delete_from_configuration(config_data):
+    delete_cmd_list = []
+    ### Doubts:
+    # Multiple delete commands could be used:
+    # delete zone-policy zone <zone1-name> from <zone2-name>
+    # delete zone-policy zone <zone1-name> from <zone2-name> firewall <ipv6/ipv4>
 
 class Firewall_zonesTemplate(NetworkTemplate):
     def __init__(self, lines=None):
@@ -72,6 +91,7 @@ class Firewall_zonesTemplate(NetworkTemplate):
                 re.VERBOSE,
             ),
             "setval": _tmplt_set_interfaces,
+            "remval": _tmplt_delete_interfaces,
             "result": {
                 "{{ name }}": {
                     "name": "{{ name }}",
@@ -94,6 +114,7 @@ class Firewall_zonesTemplate(NetworkTemplate):
                 re.VERBOSE,
             ),
             "setval": "set zone-policy zone {{ name }} description '{{description}}'",
+            "remval": "delete zone-policy zone {{ name }} description"
             "result": {
                 "{{ name }}":{
                     "name": "{{ name }}",
@@ -115,6 +136,7 @@ class Firewall_zonesTemplate(NetworkTemplate):
                 re.VERBOSE,
             ),
             "setval": "set zone-policy zone {{ name }} default-action '{{default_action}}'",
+            "remval": "delete zone-policy zone {{ name }} default-action"
             "result": {
                 "{{ name }}": {
                     "name": "{{ name }}",
@@ -139,6 +161,7 @@ class Firewall_zonesTemplate(NetworkTemplate):
                 re.VERBOSE,
             ),
             "setval": _tmplt_configure_from,
+            "remval": _tmplt_delete_from_configuration,
             "result": {
                 "{{ name }}": {
                     "name": "{{ name }}",
