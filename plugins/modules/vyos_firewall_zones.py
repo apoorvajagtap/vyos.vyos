@@ -91,6 +91,123 @@ options:
     default: merged
 """
 EXAMPLES = """
+# Using merged
+#
+# Before state:
+# -------------
+#
+# vyos@vyos:~$ show configuration commands | match zone-policy
+# set zone-policy zone test interface 'eth3'                    ## issue-aj
+
+  - name: Merge provided configuration with device configuration
+    vyos.vyos.vyos_firewall_zones:
+      config:
+        - name: 'zone1'
+          description: 'Added zone named zone1'
+          interfaces:
+            - name: 'eth1'
+          default_action: 'drop'
+
+        - name: 'zone2'
+          description: 'Added zone named zone2'
+          interfaces:
+            - name: 'eth2'
+
+      state: merged
+      
+# After State:
+# --------------
+# vyos@vyos:~$ show configuration commands | match zone-policy
+# set zone-policy zone test interface 'eth3'
+# set zone-policy zone zone1 default-action 'drop'
+# set zone-policy zone zone1 description 'Added zone named zone1'
+# set zone-policy zone zone1 interface 'eth1'
+# set zone-policy zone zone2 description 'Added zone named zone2'
+# set zone-policy zone zone2 interface 'eth2'
+
+# Module Execution:
+# ----------------
+#     "after": [
+#         {
+#             "default_action": "drop",       ## issue-aj
+#             "interfaces": [
+#                 "eth3"
+#             ],
+#             "name": "test"
+#         },
+#         {
+#             "interfaces": [
+#                 "eth1"
+#             ],
+#             "name": "zone1"
+#         },
+#         {
+#             "interfaces": [
+#                 "eth2"
+#             ],
+#             "name": "zone2"
+#         }
+#     ],
+#     "before": [
+#         {
+#             "interfaces": [
+#                 "eth3"
+#             ],
+#             "name": "test"
+#         }
+#     ],
+#     "changed": true,
+#     "commands": [
+#         "set zone-policy zone zone1 interface eth1",
+#         "set zone-policy zone zone1 description 'Added zone named zone1'",
+#         "set zone-policy zone zone1 default-action 'drop'",
+#         "set zone-policy zone zone2 interface eth2",
+#         "set zone-policy zone zone2 description 'Added zone named zone2'"
+#     ],
+#
+
+# Using Gathered:
+# --------------
+
+# Native Config:
+
+# vyos@vyos:~$ show configuration commands | match zone-policy
+# set zone-policy zone test interface 'eth3'
+# set zone-policy zone zone2 description 'Added zone named zone2'
+# set zone-policy zone zone2 interface 'eth2'
+# set zone-policy zone zone3 description 'Added zone3'
+# set zone-policy zone zone3 interface 'eth4'
+# set zone-policy zone zone3 interface 'eth1'
+# vyos@vyos:~$ 
+
+ - name: Gather config details
+    vyos.vyos.vyos_firewall_zones:
+      state: gathered
+      
+# Module Execution:
+# -----------------
+
+#      "gathered": [
+#         {
+#             "interfaces": [
+#                 "eth3"
+#             ],
+#             "name": "test"
+#         },
+#         {
+#             "interfaces": [
+#                 "eth2"
+#             ],
+#             "name": "zone2"
+#         },
+#         {
+#             "interfaces": [
+#                 "eth1"
+#             ],
+#             "name": "zone3"
+#         }
+#     ],
+  
 """
 
 from ansible.module_utils.basic import AnsibleModule

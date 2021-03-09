@@ -52,7 +52,7 @@ class Firewall_zones(ResourceModule):
             "description",
             "default_action",
             "from",
-            #"local_zone",
+            "local_zone",
         ]
 
     def execute_module(self):
@@ -82,6 +82,10 @@ class Firewall_zones(ResourceModule):
             haved = {
                 k: v for k, v in iteritems(haved) if k in wantd or not wantd
             }
+            for k, have in iteritems(haved):
+                if k in wantd:
+                    have_int.append(k)
+                    self._remove_ospf_int(have)
             wantd = {}
 
         # remove superfluous config for overridden and deleted

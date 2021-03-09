@@ -53,7 +53,6 @@ class Firewall_zonesArgs(object):  # pylint: disable=R0903
                             "choices": ["ipv4", "ipv6"],
                         },
                         "rule_set_name": {"type": "str", "required": True},
-                        },
                     },
                 },
                 "interfaces": {
@@ -62,7 +61,7 @@ class Firewall_zonesArgs(object):  # pylint: disable=R0903
                 },
                 "local_zone": {"type": "bool"},
             },
-
+        },
         "state": {
             "type": "str",
             "choices": [

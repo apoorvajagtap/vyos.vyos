@@ -95,7 +95,7 @@ class Firewall_zonesTemplate(NetworkTemplate):
             "result": {
                 "{{ name }}": {
                     "name": "{{ name }}",
-                    "name": "{{ interfaces }}",
+                    "interfaces": "{{ interfaces }}",
                 }
             },
             "shared": True
@@ -114,7 +114,7 @@ class Firewall_zonesTemplate(NetworkTemplate):
                 re.VERBOSE,
             ),
             "setval": "set zone-policy zone {{ name }} description '{{description}}'",
-            "remval": "delete zone-policy zone {{ name }} description"
+            "remval": "delete zone-policy zone {{ name }} description",
             "result": {
                 "{{ name }}":{
                     "name": "{{ name }}",
@@ -136,7 +136,7 @@ class Firewall_zonesTemplate(NetworkTemplate):
                 re.VERBOSE,
             ),
             "setval": "set zone-policy zone {{ name }} default-action '{{default_action}}'",
-            "remval": "delete zone-policy zone {{ name }} default-action"
+            "remval": "delete zone-policy zone {{ name }} default-action",
             "result": {
                 "{{ name }}": {
                     "name": "{{ name }}",
@@ -173,26 +173,26 @@ class Firewall_zonesTemplate(NetworkTemplate):
                     }
                 }
             },
-        }
-        # {
-        #     "name": "local_zone",
-        #     "getval": re.compile(
-        #         r"""
-        #         ^set
-        #         \s+zone-policy
-        #         \s+zone
-        #         \s+(?P<name>\S+)
-        #         \s+(?P<local_zone>\'local-zone\')
-        #         *$""",
-        #         re.VERBOSE,
-        #     ),
-        #     "setval": "set zone-policy zone {{ name }} local-zone",
-        #     "result": {
-        #         "{{ name }}": {
-        #             "name": "{{ name }}",
-        #             "local_zone": "{{ True if local_zone is defined }}"
-        #         }
-        #     },
-        # },
+        },
+        {
+            "name": "local_zone",
+            "getval": re.compile(
+                r"""
+                ^set
+                \s+zone-policy
+                \s+zone
+                \s+(?P<name>\S+)
+                \s+(?P<local_zone>\'local-zone\')
+                *$""",
+                re.VERBOSE,
+            ),
+            "setval": "set zone-policy zone {{ name }} local-zone",
+            "result": {
+                "{{ name }}": {
+                    "name": "{{ name }}",
+                    "local_zone": "{{ True if local_zone is defined }}"
+                }
+            },
+        },
     ]
     # fmt: on
