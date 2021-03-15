@@ -65,12 +65,12 @@ options:
       interfaces:
         description:
           - Interface associated with zone.
-        type: list
+        type: dict
         suboptions:
           name:
             description:
               - Specify the name of the interface.
-            type: str
+            type: list
             required: True  
       local_zone:
         description:
@@ -99,19 +99,20 @@ EXAMPLES = """
 # vyos@vyos:~$ show configuration commands | match zone-policy
 # set zone-policy zone test interface 'eth3'                    ## issue-aj
 
-  - name: Merge provided configuration with device configuration
+  - name: Merge the provided configuration with the exisiting running configuration
     vyos.vyos.vyos_firewall_zones:
       config:
         - name: 'zone1'
           description: 'Added zone named zone1'
           interfaces:
-            - name: 'eth1'
+            - eth1
           default_action: 'drop'
 
         - name: 'zone2'
           description: 'Added zone named zone2'
           interfaces:
-            - name: 'eth2'
+            - eth2
+            - eth4
 
       state: merged
       
@@ -124,12 +125,13 @@ EXAMPLES = """
 # set zone-policy zone zone1 interface 'eth1'
 # set zone-policy zone zone2 description 'Added zone named zone2'
 # set zone-policy zone zone2 interface 'eth2'
+# set zone-policy zone zone2 interface 'eth4'
 
 # Module Execution:
 # ----------------
 #     "after": [
 #         {
-#             "default_action": "drop",       ## issue-aj
+#             "default_action": "drop",
 #             "interfaces": [
 #                 "eth3"
 #             ],
@@ -143,7 +145,7 @@ EXAMPLES = """
 #         },
 #         {
 #             "interfaces": [
-#                 "eth2"
+#                 "eth4"            // issue-aj (eth2 not being displayed)
 #             ],
 #             "name": "zone2"
 #         }
@@ -162,9 +164,10 @@ EXAMPLES = """
 #         "set zone-policy zone zone1 description 'Added zone named zone1'",
 #         "set zone-policy zone zone1 default-action 'drop'",
 #         "set zone-policy zone zone2 interface eth2",
+#         "set zone-policy zone zone2 interface eth4",
 #         "set zone-policy zone zone2 description 'Added zone named zone2'"
 #     ],
-#
+
 
 # Using Gathered:
 # --------------
@@ -173,11 +176,12 @@ EXAMPLES = """
 
 # vyos@vyos:~$ show configuration commands | match zone-policy
 # set zone-policy zone test interface 'eth3'
+# set zone-policy zone zone1 default-action 'drop'
+# set zone-policy zone zone1 description 'Added zone named zone1'
+# set zone-policy zone zone1 interface 'eth1'
 # set zone-policy zone zone2 description 'Added zone named zone2'
 # set zone-policy zone zone2 interface 'eth2'
-# set zone-policy zone zone3 description 'Added zone3'
-# set zone-policy zone zone3 interface 'eth4'
-# set zone-policy zone zone3 interface 'eth1'
+# set zone-policy zone zone2 interface 'eth4'
 # vyos@vyos:~$ 
 
  - name: Gather config details
@@ -187,27 +191,113 @@ EXAMPLES = """
 # Module Execution:
 # -----------------
 
-#      "gathered": [
-#         {
-#             "interfaces": [
-#                 "eth3"
-#             ],
-#             "name": "test"
-#         },
-#         {
-#             "interfaces": [
-#                 "eth2"
-#             ],
-#             "name": "zone2"
-#         },
-#         {
-#             "interfaces": [
-#                 "eth1"
-#             ],
-#             "name": "zone3"
-#         }
-#     ],
-  
+    # "gathered": [
+    #     {
+    #         "default_action": "drop",     //issue-aj (default_action set for zone1)
+    #         "interfaces": [
+    #             "eth3"
+    #         ],
+    #         "name": "test"
+    #     },
+    #     {
+    #         "interfaces": [
+    #             "eth1"
+    #         ],
+    #         "name": "zone1"
+    #     },
+    #     {
+    #         "interfaces": [
+    #             "eth4"
+    #         ],
+    #         "name": "zone2"
+    #     }
+    # ],
+
+# Using deleted:
+# -------------
+
+# before state:
+# -------------
+
+# vyos@vyos:~$ show configuration commands | match zone-policy
+# set zone-policy zone test interface 'eth3'
+# set zone-policy zone zone1 default-action 'drop'
+# set zone-policy zone zone1 description 'Added zone named zone1'
+# set zone-policy zone zone1 interface 'eth1'
+# set zone-policy zone zone2 description 'Added zone named zone2'
+# set zone-policy zone zone2 interface 'eth2'
+# set zone-policy zone zone2 interface 'eth4'
+# vyos@vyos:~$
+
+    - name: Delete device configuration
+      vyos_firewall_zones:
+        config:
+          - name: 'zone2'
+            interfaces:
+              - eth2
+                          
+      state: deleted     
+      
+# After State:
+# -----------
+
+# vyos@vyos:~$ show configuration commands | match zone-policy
+# set zone-policy zone test interface 'eth3'
+# set zone-policy zone zone1 default-action 'drop'
+# set zone-policy zone zone1 description 'Added zone named zone1'
+# set zone-policy zone zone1 interface 'eth1'
+# set zone-policy zone zone2 description 'Added zone named zone2'
+# set zone-policy zone zone2 interface 'eth2'       
+# vyos@vyos:~$ 
+#
+#
+    # "after": [
+    #     {
+    #         "default_action": "drop",
+    #         "interfaces": [
+    #             "eth3"
+    #         ],
+    #         "name": "test"
+    #     },
+    #     {
+    #         "interfaces": [
+    #             "eth1"
+    #         ],
+    #         "name": "zone1"
+    #     },
+    #     {
+    #         "interfaces": [
+    #             "eth2"
+    #         ],
+    #         "name": "zone2"
+    #     }
+    # ],
+    # "before": [
+    #     {
+    #         "default_action": "drop",
+    #         "interfaces": [
+    #             "eth3"
+    #         ],
+    #         "name": "test"
+    #     },
+    #     {
+    #         "interfaces": [
+    #             "eth1"
+    #         ],
+    #         "name": "zone1"
+    #     },
+    #     {
+    #         "interfaces": [
+    #             "eth4"
+    #         ],
+    #         "name": "zone2"
+    #     }
+    # ],
+    # "changed": true,
+    # "commands": [
+    #     "delete zone-policy zone zone2 interface eth4"       // issue-aj (should have deleted eth2, but deleted eth4)
+    # ],
+
 """
 
 from ansible.module_utils.basic import AnsibleModule

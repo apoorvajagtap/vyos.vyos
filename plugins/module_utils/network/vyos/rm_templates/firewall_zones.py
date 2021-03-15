@@ -26,36 +26,25 @@ def _get_parameters(data):
         val = 'name'
     return val
 
-def _tmplt_set_interfaces(config_data):
+def _tmplt_manage_interfaces(config_data):
     cmd_list = []
-    for i in config_data["interfaces"]:
-        key, val = list(i.items())[0]
+    print("************config_data******", type(config_data), "?///", type(config_data["interfaces"]))
+    for interface_name in config_data["interfaces"]:
+        print("##################", interface_name)
         command = (
-            "set zone-policy zone"
+            "zone-policy zone"
             + " {name} ".format(**config_data)
-            + "interface {name}".format(name=val)
+            + "interface {name}".format(name=interface_name)
         )
         cmd_list.append(command)
     return cmd_list
-
-def _tmplt_delete_interfaces(config_data):
-    delete_cmd_list = []
-    for i in config_data["interfaces"]:
-        key, val = list(i.items())[0]
-        command = (
-            "delete zone-policy zone"
-            + " {name} ".format(**config_data)
-            + "interface {name}".format(name=val)
-        )
-        delete_cmd_list.append(command)
-    return delete_cmd_list
 
 def _tmplt_configure_from(config_data):
     cmd_list = []
     for i in config_data["from"]:
         afi_val = _get_parameters(i)
         command = (
-            "set zone-policy zone"
+            "zone-policy zone"
             + " {name} ".format(**config_data)
             + "from {from_zone} ".format(from_zone=i["from_zone"])
             + "firewall {firewall_afi} ".format(firewall_afi=afi_val)
@@ -73,7 +62,8 @@ def _tmplt_delete_from_configuration(config_data):
 
 class Firewall_zonesTemplate(NetworkTemplate):
     def __init__(self, lines=None):
-        super(Firewall_zonesTemplate, self).__init__(lines=lines, tmplt=self)
+        prefix = {"set": "set", "remove": "delete"}
+        super(Firewall_zonesTemplate, self).__init__(lines=lines, tmplt=self, prefix=prefix)
 
     # fmt: off
     PARSERS = [
@@ -90,8 +80,7 @@ class Firewall_zonesTemplate(NetworkTemplate):
                 *$""",
                 re.VERBOSE,
             ),
-            "setval": _tmplt_set_interfaces,
-            "remval": _tmplt_delete_interfaces,
+            "setval": _tmplt_manage_interfaces,
             "result": {
                 "{{ name }}": {
                     "name": "{{ name }}",
@@ -113,8 +102,8 @@ class Firewall_zonesTemplate(NetworkTemplate):
                 *$""",
                 re.VERBOSE,
             ),
-            "setval": "set zone-policy zone {{ name }} description '{{description}}'",
-            "remval": "delete zone-policy zone {{ name }} description",
+            "setval": "zone-policy zone {{ name }} description '{{description}}'",
+            "remval": "zone-policy zone {{ name }} description",
             "result": {
                 "{{ name }}":{
                     "name": "{{ name }}",
@@ -135,8 +124,8 @@ class Firewall_zonesTemplate(NetworkTemplate):
                 *$""",
                 re.VERBOSE,
             ),
-            "setval": "set zone-policy zone {{ name }} default-action '{{default_action}}'",
-            "remval": "delete zone-policy zone {{ name }} default-action",
+            "setval": "zone-policy zone {{ name }} default-action '{{default_action}}'",
+            "remval": "zone-policy zone {{ name }} default-action",
             "result": {
                 "{{ name }}": {
                     "name": "{{ name }}",
@@ -186,13 +175,32 @@ class Firewall_zonesTemplate(NetworkTemplate):
                 *$""",
                 re.VERBOSE,
             ),
-            "setval": "set zone-policy zone {{ name }} local-zone",
+            "setval": "zone-policy zone {{ name }} local-zone",
             "result": {
                 "{{ name }}": {
                     "name": "{{ name }}",
                     "local_zone": "{{ True if local_zone is defined }}"
                 }
             },
+        },
+        {
+            "name": "remove_zone",
+            "getval": re.compile(
+                r"""
+                ^delete
+                \s+zone-policy
+                \s+zone
+                \s+(?P<name>\S+)
+                *$""",
+                re.VERBOSE,
+            ),
+            "remval": "zone-policy zone {{ name }}",
+            "result": {
+                "{{ name }}": {
+                    "name": "{{ name }}",
+                }
+            },
+            "shared": True
         },
     ]
     # fmt: on
