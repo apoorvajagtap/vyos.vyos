@@ -28,9 +28,8 @@ def _get_parameters(data):
 
 def _tmplt_manage_interfaces(config_data):
     cmd_list = []
-    print("************config_data******", type(config_data), "?///", type(config_data["interfaces"]))
+    print("inside tmplt_manage_interface ------>", config_data, "dhichik  ????", config_data["interfaces"])
     for interface_name in config_data["interfaces"]:
-        print("##################", interface_name)
         command = (
             "zone-policy zone"
             + " {name} ".format(**config_data)
@@ -81,10 +80,13 @@ class Firewall_zonesTemplate(NetworkTemplate):
                 re.VERBOSE,
             ),
             "setval": _tmplt_manage_interfaces,
+            #"compval": "interfaces",
             "result": {
                 "{{ name }}": {
                     "name": "{{ name }}",
-                    "interfaces": "{{ interfaces }}",
+                    "interfaces": [
+                        "{{ interfaces }}",
+                    ],
                 }
             },
             "shared": True
@@ -98,16 +100,16 @@ class Firewall_zonesTemplate(NetworkTemplate):
                 \s+zone
                 \s+(?P<name>\S+)
                 \s+description
-                \s+(?P<description>\S+)
+                \s+(?P<desc>\S+)
                 *$""",
                 re.VERBOSE,
             ),
             "setval": "zone-policy zone {{ name }} description '{{description}}'",
-            "remval": "zone-policy zone {{ name }} description",
+            #"compval": "description",
             "result": {
                 "{{ name }}":{
                     "name": "{{ name }}",
-                    "description": "{{ description }}",
+                    "description": "{{ desc }}",
                 }
             },
         },
@@ -124,8 +126,9 @@ class Firewall_zonesTemplate(NetworkTemplate):
                 *$""",
                 re.VERBOSE,
             ),
-            "setval": "zone-policy zone {{ name }} default-action '{{default_action}}'",
-            "remval": "zone-policy zone {{ name }} default-action",
+            "setval": "zone-policy zone {{ name }} default-action {{default_action}}", #_tmplt_manage_default_action,
+            #"compval": "default_action",
+            #"remval": "zone-policy zone {{ name }} default-action",
             "result": {
                 "{{ name }}": {
                     "name": "{{ name }}",
@@ -150,7 +153,8 @@ class Firewall_zonesTemplate(NetworkTemplate):
                 re.VERBOSE,
             ),
             "setval": _tmplt_configure_from,
-            "remval": _tmplt_delete_from_configuration,
+            #"compval": "from.rule_set_name",
+            #"remval": _tmplt_delete_from_configuration,
             "result": {
                 "{{ name }}": {
                     "name": "{{ name }}",
