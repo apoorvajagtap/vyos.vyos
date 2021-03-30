@@ -54,7 +54,6 @@ class Firewall_zones(ResourceModule):
             "default_action",
             "from",
             "local_zone",
-            "remove_zone",
         ]
 
     def execute_module(self):
@@ -79,17 +78,10 @@ class Firewall_zones(ResourceModule):
 
         ### commented out following, as we just need wantd configurations to be set,
         ### and no referance with wantd,,, but commenting out following is a problem for
-        ### 'from' parser with merged state. (Alternative from line 87)
+        ### 'from' parser with merged state. (issue-aj)
         # if state is merged, merge want onto have and then compare
-        # if self.state == "merged":
-        #     wantd = dict_merge(haved, wantd)
-
         if self.state == "merged":
-            for parser in self.parsers:
-                if parser != "interfaces":
-                    print("NOPE !!!", parser)
-                    wantd = dict_merge(haved, wantd)
-                    continue
+            wantd = dict_merge(haved, wantd)
 
         # if state is deleted, empty out wantd and set haved to wantd
         if self.state == "deleted":
@@ -129,6 +121,7 @@ class Firewall_zones(ResourceModule):
             _inw = get_from_dict(want, compval)
             _inh = get_from_dict(have, compval)
 
+            print("----->> parser in config >>> >>>>>>> ", parser)
             print("want inside config-fw-zone ------->", want, "have inside config-fw-zone ------>", have)
             print("_inw inside config-fw-zone ------>", _inw, "_inh inside config-fw-zone ------>", _inh)
             print("=========================================================")

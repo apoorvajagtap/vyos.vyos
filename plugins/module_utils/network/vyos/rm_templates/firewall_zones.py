@@ -41,6 +41,7 @@ def _tmplt_manage_interfaces(config_data):
 def _tmplt_configure_from(config_data):
     cmd_list = []
     for i in config_data["from"]:
+        print("rule set >>>> ", i["rule_set_name"], "from_zone >>>>", i["from_zone"])
         afi_val = _get_parameters(i)
         command = (
             "zone-policy zone"
@@ -54,10 +55,36 @@ def _tmplt_configure_from(config_data):
 
 def _tmplt_delete_from_configuration(config_data):
     delete_cmd_list = []
-    ### Doubts:
-    # Multiple delete commands could be used:
-    # delete zone-policy zone <zone1-name> from <zone2-name>
-    # delete zone-policy zone <zone1-name> from <zone2-name> firewall <ipv6/ipv4>
+    for i in config_data["from"]:
+        command = ""
+        for k, v in i.items():
+            if k == "rule_set_name":
+                afi_val = _get_parameters(i)
+                command = (
+                        "zone-policy zone"
+                        + " {name} ".format(**config_data)
+                        + "from {from_zone} ".format(from_zone=i["from_zone"])
+                        + "firewall {firewall_afi} ".format(firewall_afi=afi_val)
+                        + "{rule_set_name}".format(rule_set_name=i["rule_set_name"])
+                )
+
+            elif k == "from_zone":
+                command = (
+                        "zone-policy zone"
+                        + " {name} ".format(**config_data)
+                        + "from {from_zone}".format(from_zone=i["from_zone"])
+                )
+
+            elif k == "remove_from" and i["remove_from"]:
+                command = (
+                        "zone-policy zone"
+                        + " {name} ".format(**config_data)
+                        + "from"
+                )
+
+        if command:
+            delete_cmd_list.append(command)
+    return delete_cmd_list
 
 class Firewall_zonesTemplate(NetworkTemplate):
     def __init__(self, lines=None):
@@ -154,19 +181,43 @@ class Firewall_zonesTemplate(NetworkTemplate):
             ),
             "setval": _tmplt_configure_from,
             #"compval": "from.rule_set_name",
-            #"remval": _tmplt_delete_from_configuration,
+            "remval": _tmplt_delete_from_configuration,
             "result": {
                 "{{ name }}": {
                     "name": "{{ name }}",
                     "from": {
+                        "from zone": "{{ from_zone }}",
                         "firewall": {
-                            "version": "{{ afi }}",
+                            "afi": '{{ "ipv4" if afi == "ipv4" else "ipv6" }}',
                             "rule_set_name": "{{ rule_set_name }}"
                         }
                     }
                 }
             },
         },
+        # {
+        #     "name": "from_from_zone",
+        #     "getval": re.compile(
+        #         r"""
+        #         ^set
+        #         \s+zone-policy
+        #         \s+zone
+        #         \s+(?P<name>\S+)
+        #         \s+from
+        #         \s+(?P<from_zone>\S+)from_name
+        #         *$""",
+        #         re.VERBOSE,
+        #     ),
+        #     "setval": _tmplt_configure_from,
+        #     "result": {
+        #         "{{ name }}": {
+        #             "name": "{{ name }}",
+        #             "from": {
+        #                 "from zone": "{{ from_zone }}",
+        #             }
+        #         }
+        #     },
+        # },
         {
             "name": "local_zone",
             "getval": re.compile(
@@ -186,25 +237,6 @@ class Firewall_zonesTemplate(NetworkTemplate):
                     "local_zone": "{{ True if local_zone is defined }}"
                 }
             },
-        },
-        {
-            "name": "remove_zone",
-            "getval": re.compile(
-                r"""
-                ^delete
-                \s+zone-policy
-                \s+zone
-                \s+(?P<name>\S+)
-                *$""",
-                re.VERBOSE,
-            ),
-            "remval": "zone-policy zone {{ name }}",
-            "result": {
-                "{{ name }}": {
-                    "name": "{{ name }}",
-                }
-            },
-            "shared": True
         },
     ]
     # fmt: on
