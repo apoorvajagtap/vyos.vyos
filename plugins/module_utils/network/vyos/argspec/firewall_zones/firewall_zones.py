@@ -44,20 +44,18 @@ class Firewall_zonesArgs(object):  # pylint: disable=R0903
                 "description": {"type": "str"},
                 "from": {
                     "type": "list",
-                    "elements": "dict",
                     "options": {
-                        "from_zone": {"type": "str", "required": True},
+                        "from_zone": {"type": "str"},
                         "afi": {
                             "type": "str",
-                            "required": True,
                             "choices": ["ipv4", "ipv6"],
                         },
-                        "rule_set_name": {"type": "str", "required": True},
+                        "rule_set_name": {"type": "str"},
+                        "remove_from": {"type": "bool"},
                     },
                 },
                 "interfaces": {
                     "type": "list",
-                    "required": True,
                 },
                 "local_zone": {"type": "bool"},
             },
@@ -75,4 +73,5 @@ class Firewall_zonesArgs(object):  # pylint: disable=R0903
             ],
             "default": "merged",
         },
+        "running_config": {},
     }  # pylint: disable=C0301

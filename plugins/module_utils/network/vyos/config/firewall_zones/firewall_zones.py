@@ -74,8 +74,6 @@ class Firewall_zones(ResourceModule):
         wantd = {entry['name']: entry for entry in self.want}
         haved = {entry['name']: entry for entry in self.have}
 
-        print("wantd ---------->", wantd, "haved --------------->", haved)
-
         ### commented out following, as we just need wantd configurations to be set,
         ### and no referance with wantd,,, but commenting out following is a problem for
         ### 'from' parser with merged state. (issue-aj)
@@ -99,9 +97,6 @@ class Firewall_zones(ResourceModule):
         for k, want in iteritems(wantd):
             if self.state == "deleted":
                 self._compare_for_deleted_state(want=want, have=haved.pop(k, {}))
-                # for parser in self.parsers:
-                #     if parser == "interfaces":
-                #         self.addcmd(want, parser, True)
             else:
                 self._compare(want=want, have=haved.pop(k, {}))
 
@@ -121,14 +116,8 @@ class Firewall_zones(ResourceModule):
             _inw = get_from_dict(want, compval)
             _inh = get_from_dict(have, compval)
 
-            print("----->> parser in config >>> >>>>>>> ", parser)
-            print("want inside config-fw-zone ------->", want, "have inside config-fw-zone ------>", have)
-            print("_inw inside config-fw-zone ------>", _inw, "_inh inside config-fw-zone ------>", _inh)
-            print("=========================================================")
-
             ## If inw is not none, delete the entries. otherwise skip
             if _inw is not None: #and _inw != _inh:
-                print("######################## check 1 +++++++ ")
                 if isinstance(_inw, bool):
                     if _inw is False and _inh is None:
                         continue

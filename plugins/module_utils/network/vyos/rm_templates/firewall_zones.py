@@ -28,7 +28,6 @@ def _get_parameters(data):
 
 def _tmplt_manage_interfaces(config_data):
     cmd_list = []
-    print("inside tmplt_manage_interface ------>", config_data, "dhichik  ????", config_data["interfaces"])
     for interface_name in config_data["interfaces"]:
         command = (
             "zone-policy zone"
@@ -41,7 +40,6 @@ def _tmplt_manage_interfaces(config_data):
 def _tmplt_configure_from(config_data):
     cmd_list = []
     for i in config_data["from"]:
-        print("rule set >>>> ", i["rule_set_name"], "from_zone >>>>", i["from_zone"])
         afi_val = _get_parameters(i)
         command = (
             "zone-policy zone"
@@ -107,7 +105,6 @@ class Firewall_zonesTemplate(NetworkTemplate):
                 re.VERBOSE,
             ),
             "setval": _tmplt_manage_interfaces,
-            #"compval": "interfaces",
             "result": {
                 "{{ name }}": {
                     "name": "{{ name }}",
@@ -116,7 +113,7 @@ class Firewall_zonesTemplate(NetworkTemplate):
                     ],
                 }
             },
-            "shared": True
+            "shared": True,
         },
         {
             "name": "description",
@@ -127,18 +124,18 @@ class Firewall_zonesTemplate(NetworkTemplate):
                 \s+zone
                 \s+(?P<name>\S+)
                 \s+description
-                \s+(?P<desc>\S+)
+                \s+(?P<description>.*\S+)
                 *$""",
                 re.VERBOSE,
             ),
             "setval": "zone-policy zone {{ name }} description '{{description}}'",
-            #"compval": "description",
             "result": {
                 "{{ name }}":{
                     "name": "{{ name }}",
-                    "description": "{{ desc }}",
+                    "description": "{{ description }}",
                 }
             },
+            "shared": True,
         },
         {
             "name": "default_action",
@@ -153,15 +150,14 @@ class Firewall_zonesTemplate(NetworkTemplate):
                 *$""",
                 re.VERBOSE,
             ),
-            "setval": "zone-policy zone {{ name }} default-action {{default_action}}", #_tmplt_manage_default_action,
-            #"compval": "default_action",
-            #"remval": "zone-policy zone {{ name }} default-action",
+            "setval": "zone-policy zone {{ name }} default-action {{default_action}}",
             "result": {
                 "{{ name }}": {
                     "name": "{{ name }}",
                     "default_action": "{{ default_action }}",
                 }
             },
+            "shared": True,
         },
         {
             "name": "from",
@@ -172,52 +168,27 @@ class Firewall_zonesTemplate(NetworkTemplate):
                 \s+zone
                 \s+(?P<name>\S+)
                 \s+from
-                \s+(?P<from_zone>\S+)from_name
+                \s+(?P<from_zone>\S+)
                 \s+firewall
-                \s+(?P<afi>name|ipv6-name)
-                \s+(?P<rule_set_name>)
+                \s+(?P<afi>\S+)
+                \s+(?P<rule_set_name>\S+)
                 *$""",
                 re.VERBOSE,
             ),
             "setval": _tmplt_configure_from,
-            #"compval": "from.rule_set_name",
             "remval": _tmplt_delete_from_configuration,
             "result": {
                 "{{ name }}": {
                     "name": "{{ name }}",
-                    "from": {
-                        "from zone": "{{ from_zone }}",
-                        "firewall": {
-                            "afi": '{{ "ipv4" if afi == "ipv4" else "ipv6" }}',
-                            "rule_set_name": "{{ rule_set_name }}"
-                        }
-                    }
+                    "from": [
+                        "{{ from_zone }}",
+                        "{{ 'ipv4' if afi == 'name' else 'ipv6' }}",
+                        "{{ rule_set_name if rule_set_name is defined}}",
+                    ],
                 }
             },
+           "shared": True,
         },
-        # {
-        #     "name": "from_from_zone",
-        #     "getval": re.compile(
-        #         r"""
-        #         ^set
-        #         \s+zone-policy
-        #         \s+zone
-        #         \s+(?P<name>\S+)
-        #         \s+from
-        #         \s+(?P<from_zone>\S+)from_name
-        #         *$""",
-        #         re.VERBOSE,
-        #     ),
-        #     "setval": _tmplt_configure_from,
-        #     "result": {
-        #         "{{ name }}": {
-        #             "name": "{{ name }}",
-        #             "from": {
-        #                 "from zone": "{{ from_zone }}",
-        #             }
-        #         }
-        #     },
-        # },
         {
             "name": "local_zone",
             "getval": re.compile(
