@@ -50,28 +50,23 @@ options:
             description:
               - Zone from which to filter traffic.
             type: str
-            required: True
           afi:
             description:
               - Address Family Identifier (AFI) for firewall options.
             type: str
             choices: ['ipv4', 'ipv6']
-            required: True
           rule_set_name:
             description:
               - Firewall ruleset.
             type: str
-            required: True 
+          remove_from:
+            description:
+              - Delete the "from" section for a zone.
+            type: bool
       interfaces:
         description:
           - Interface associated with zone.
-        type: dict
-        suboptions:
-          name:
-            description:
-              - Specify the name of the interface.
-            type: list
-            required: True  
+        type: list 
       local_zone:
         description:
           - Zone to be local-zone.
@@ -97,55 +92,48 @@ EXAMPLES = """
 # -------------
 #
 # vyos@vyos:~$ show configuration commands | match zone-policy
-# set zone-policy zone test interface 'eth3'                    ## issue-aj
+# set zone-policy zone zone1 interface 'eth1'
 
   - name: Merge the provided configuration with the exisiting running configuration
-    vyos.vyos.vyos_firewall_zones:
+    vyos_firewall_zones:
       config:
         - name: 'zone1'
-          description: 'Added zone named zone1'
-          interfaces:
-            - eth1
           default_action: 'drop'
-
+          description: 'Merging configurations for zone1'
         - name: 'zone2'
-          description: 'Added zone named zone2'
           interfaces:
             - eth2
-            - eth4
-
+            - eth3
+          description: 'Added zone named zone2'
       state: merged
       
 # After State:
 # --------------
+
 # vyos@vyos:~$ show configuration commands | match zone-policy
-# set zone-policy zone test interface 'eth3'
 # set zone-policy zone zone1 default-action 'drop'
-# set zone-policy zone zone1 description 'Added zone named zone1'
+# set zone-policy zone zone1 description 'Merging configurations for zone1'
 # set zone-policy zone zone1 interface 'eth1'
 # set zone-policy zone zone2 description 'Added zone named zone2'
 # set zone-policy zone zone2 interface 'eth2'
-# set zone-policy zone zone2 interface 'eth4'
+# set zone-policy zone zone2 interface 'eth3'
 
 # Module Execution:
 # ----------------
 #     "after": [
 #         {
 #             "default_action": "drop",
-#             "interfaces": [
-#                 "eth3"
-#             ],
-#             "name": "test"
-#         },
-#         {
+#             "description": "Merging configurations for zone1",
 #             "interfaces": [
 #                 "eth1"
 #             ],
 #             "name": "zone1"
 #         },
 #         {
+#             "description": "Added zone named zone2",
 #             "interfaces": [
-#                 "eth4"            // issue-aj (eth2 not being displayed)
+#                 "eth3",
+#                 "eth2"
 #             ],
 #             "name": "zone2"
 #         }
@@ -153,19 +141,300 @@ EXAMPLES = """
 #     "before": [
 #         {
 #             "interfaces": [
-#                 "eth3"
+#                 "eth1"
 #             ],
-#             "name": "test"
+#             "name": "zone1"
 #         }
 #     ],
 #     "changed": true,
 #     "commands": [
-#         "set zone-policy zone zone1 interface eth1",
-#         "set zone-policy zone zone1 description 'Added zone named zone1'",
-#         "set zone-policy zone zone1 default-action 'drop'",
+#         "set zone-policy zone zone1 description 'Merging configurations for zone1'",
+#         "set zone-policy zone zone1 default-action drop",
 #         "set zone-policy zone zone2 interface eth2",
-#         "set zone-policy zone zone2 interface eth4",
+#         "set zone-policy zone zone2 interface eth3",
 #         "set zone-policy zone zone2 description 'Added zone named zone2'"
+#     ],
+
+
+# Using replaced:
+
+# Before State:
+# ------------
+
+# vyos@vyos:~$ show configuration commands | match zone-policy
+# set zone-policy zone zone1 default-action 'drop'
+# set zone-policy zone zone1 description 'Merging configurations for zone1'
+# set zone-policy zone zone1 interface 'eth1'
+# set zone-policy zone zone2 description 'Added zone named zone2'
+# set zone-policy zone zone2 interface 'eth2'
+# set zone-policy zone zone2 interface 'eth3'
+
+  - name: Replace provided configuration with device configuration
+    vyos_firewall_zones:
+      config:
+        - name: 'zone1'
+          interfaces:
+            - eth4
+        - name: 'zone2'
+          interfaces:
+            - eth2
+          description: 'Replaced the description for zone2'
+      state: replaced
+      
+# After State:
+# -----------
+
+# vyos@vyos:~$ show configuration commands | match zone-policy
+# set zone-policy zone zone1 interface 'eth1'
+# set zone-policy zone zone1 interface 'eth4'
+# set zone-policy zone zone2 description 'Replaced the description for zone2'
+# set zone-policy zone zone2 interface 'eth2'
+# set zone-policy zone zone2 interface 'eth3'
+
+# Module Execution
+# ----------------
+#     "after": [
+#         {
+#             "interfaces": [
+#                 "eth4",
+#                 "eth1"
+#             ],
+#             "name": "zone1"
+#         },
+#         {
+#             "description": "Replaced the description for zone2",
+#             "interfaces": [
+#                 "eth2",
+#                 "eth3"
+#             ],
+#             "name": "zone2"
+#         }
+#     ],
+#     "before": [
+#         {
+#             "default_action": "drop",
+#             "description": "Merging configurations for zone1",
+#             "interfaces": [
+#                 "eth1"
+#             ],
+#             "name": "zone1"
+#         },
+#         {
+#             "description": "Added zone named zone2",
+#             "interfaces": [
+#                 "eth2",
+#                 "eth3"
+#             ],
+#             "name": "zone2"
+#         }
+#     ],
+#     "changed": true,
+#     "commands": [
+#         "set zone-policy zone zone1 interface eth4",
+#         "delete zone-policy zone zone1 description 'Merging configurations for zone1'",
+#         "delete zone-policy zone zone1 default-action drop",
+#         "set zone-policy zone zone2 interface eth2",
+#         "set zone-policy zone zone2 description 'Replaced the description for zone2'"
+#     ],
+#
+
+# Using Overridden:
+# -----------------
+
+# Before State:
+# ------------
+
+# vyos@vyos:~$ show configuration commands | match zone-policy
+# set zone-policy zone zone1 default-action 'drop'
+# set zone-policy zone zone1 description 'Merging configurations for zone1'
+# set zone-policy zone zone1 interface 'eth1'
+# set zone-policy zone zone2 description 'Added zone named zone2'
+# set zone-policy zone zone2 interface 'eth2'
+
+  - name: Override device configuration with provided configuration
+    vyos_firewall_zones:
+      config:
+        - name: 'zone1'
+          interfaces:
+            - eth1
+        - name: 'zone2'
+          interfaces:
+            - eth2
+        - name: 'zone3'
+          description: 'Adding new zone zone3'
+          interfaces:
+            - eth4
+      
+      state: overridden
+      
+# After State:
+# -----------
+
+# vyos@vyos:~$ show configuration commands | match zone-policy
+# set zone-policy zone zone1 interface 'eth1'
+# set zone-policy zone zone2 interface 'eth2'
+# set zone-policy zone zone3 description 'Adding new zone zone3'
+# set zone-policy zone zone3 interface 'eth4'
+
+# Module Execution:
+# ----------------
+
+#       "after": [
+#           {
+#               "interfaces": [
+#                   "eth1"
+#               ],
+#               "name": "zone1"
+#           },
+#           {
+#               "interfaces": [
+#                   "eth2"
+#               ],
+#               "name": "zone2"
+#           },
+#           {
+#               "description": "Adding new zone zone3",
+#               "interfaces": [
+#                   "eth4"
+#               ],
+#               "name": "zone3"
+#           }
+#       ],
+#       "before": [
+#           {
+#               "default_action": "drop",
+#               "description": "Merging configurations for zone1",
+#               "interfaces": [
+#                   "eth1"
+#               ],
+#               "name": "zone1"
+#           },
+#           {
+#               "description": "Added zone named zone2",
+#               "interfaces": [
+#                   "eth2"
+#               ],
+#               "name": "zone2"
+#           }
+#       ],
+#       "changed": true,
+#       "commands": [
+#           "delete zone-policy zone zone1 description 'Merging configurations for zone1'",
+#           "delete zone-policy zone zone1 default-action drop",
+#           "delete zone-policy zone zone2 description 'Added zone named zone2'",
+#           "set zone-policy zone zone3 interface eth4",
+#           "set zone-policy zone zone3 description 'Adding new zone zone3'"
+#       ],
+
+# Using deleted:
+# -------------
+
+# Before State:
+# -------------
+
+# vyos@vyos:~$ show configuration commands | match zone-policy
+# set zone-policy zone zone1 default-action 'drop'
+# set zone-policy zone zone1 description 'Merging configurations for zone1'
+# set zone-policy zone zone1 interface 'eth1'
+# set zone-policy zone zone2 description 'Added zone named zone2'
+# set zone-policy zone zone2 from zone1 firewall name 'Downlink'
+# set zone-policy zone zone2 interface 'eth2'
+# set zone-policy zone zone2 interface 'eth3'
+# set zone-policy zone zone3 from zone2 firewall ipv6-name 'V6-LOCAL'
+# set zone-policy zone zone3 interface 'eth4'
+
+  - name: Delete the specified configurations
+    vyos_firewall_zones:
+      config:
+        - name: 'zone3'
+          from:
+            - remove_from: True
+        - name: 'zone2'
+          interfaces:
+            - eth3
+          description: 'Added zone named zone2'
+      state: deleted
+
+# After State:
+# ------------
+
+# vyos@vyos:~$ show configuration commands | match zone-policy
+# set zone-policy zone zone1 default-action 'drop'
+# set zone-policy zone zone1 description 'Merging configurations for zone1'
+# set zone-policy zone zone1 interface 'eth1'
+# set zone-policy zone zone2 from zone1 firewall name 'Downlink'
+# set zone-policy zone zone2 interface 'eth2'
+# set zone-policy zone zone3 interface 'eth4'
+
+# Module Execution:
+# -----------------
+ 
+#     "after": [
+#         {
+#             "default_action": "drop",
+#             "description": "Merging configurations for zone1",
+#             "interfaces": [
+#                 "eth1"
+#             ],
+#             "name": "zone1"
+#         },
+#         {
+#             "from": [
+#                 "zone1",
+#                 "ipv4",
+#                 "Downlink"
+#             ],
+#             "interfaces": [
+#                 "eth2"
+#             ],
+#             "name": "zone2"
+#         },
+#         {
+#             "interfaces": [
+#                 "eth4"
+#             ],
+#             "name": "zone3"
+#         }
+#     ],
+#     "before": [
+#         {
+#             "default_action": "drop",
+#             "description": "Merging configurations for zone1",
+#             "interfaces": [
+#                 "eth1"
+#             ],
+#             "name": "zone1"
+#         },
+#         {
+#             "description": "Added zone named zone2",
+#             "from": [
+#                 "zone1",
+#                 "ipv4",
+#                 "Downlink"
+#             ],
+#             "interfaces": [
+#                 "eth3",
+#                 "eth2"
+#             ],
+#             "name": "zone2"
+#         },
+#         {
+#             "from": [
+#                 "zone2",
+#                 "ipv6",
+#                 "V6-LOCAL"
+#             ],
+#             "interfaces": [
+#                 "eth4"
+#             ],
+#             "name": "zone3"
+#         }
+#     ],
+#     "changed": true,
+#     "commands": [
+#         "delete zone-policy zone zone3 from",
+#         "delete zone-policy zone zone2 interface eth3",
+#         "delete zone-policy zone zone2 description 'Added zone named zone2'"
 #     ],
 
 
@@ -175,14 +444,13 @@ EXAMPLES = """
 # Native Config:
 
 # vyos@vyos:~$ show configuration commands | match zone-policy
-# set zone-policy zone test interface 'eth3'
 # set zone-policy zone zone1 default-action 'drop'
-# set zone-policy zone zone1 description 'Added zone named zone1'
+# set zone-policy zone zone1 description 'Merging configurations for zone1'
 # set zone-policy zone zone1 interface 'eth1'
-# set zone-policy zone zone2 description 'Added zone named zone2'
+# set zone-policy zone zone2 from zone1 firewall name 'Downlink'
 # set zone-policy zone zone2 interface 'eth2'
-# set zone-policy zone zone2 interface 'eth4'
-# vyos@vyos:~$ 
+# set zone-policy zone zone3 description 'This is zone3'
+# set zone-policy zone zone3 interface 'eth4'
 
  - name: Gather config details
     vyos.vyos.vyos_firewall_zones:
@@ -190,113 +458,36 @@ EXAMPLES = """
       
 # Module Execution:
 # -----------------
+# 
+#      "gathered": [
+#         {
+#             "default_action": "drop",
+#             "description": "Merging configurations for zone1",
+#             "interfaces": [
+#                 "eth1"
+#             ],
+#             "name": "zone1"
+#         },
+#         {
+#             "from": [
+#                 "zone1",
+#                 "ipv4",
+#                 "Downlink"
+#             ],
+#             "interfaces": [
+#                 "eth2"
+#             ],
+#             "name": "zone2"
+#         },
+#         {
+#             "description": "This is zone3",
+#             "interfaces": [
+#                 "eth4"
+#             ],
+#             "name": "zone3"
+#         }
+#     ],
 
-    # "gathered": [
-    #     {
-    #         "default_action": "drop",     //issue-aj (default_action set for zone1)
-    #         "interfaces": [
-    #             "eth3"
-    #         ],
-    #         "name": "test"
-    #     },
-    #     {
-    #         "interfaces": [
-    #             "eth1"
-    #         ],
-    #         "name": "zone1"
-    #     },
-    #     {
-    #         "interfaces": [
-    #             "eth4"
-    #         ],
-    #         "name": "zone2"
-    #     }
-    # ],
-
-# Using deleted:
-# -------------
-
-# before state:
-# -------------
-
-# vyos@vyos:~$ show configuration commands | match zone-policy
-# set zone-policy zone test interface 'eth3'
-# set zone-policy zone zone1 default-action 'drop'
-# set zone-policy zone zone1 description 'Added zone named zone1'
-# set zone-policy zone zone1 interface 'eth1'
-# set zone-policy zone zone2 description 'Added zone named zone2'
-# set zone-policy zone zone2 interface 'eth2'
-# set zone-policy zone zone2 interface 'eth4'
-# vyos@vyos:~$
-
-    - name: Delete device configuration
-      vyos_firewall_zones:
-        config:
-          - name: 'zone2'
-            interfaces:
-              - eth2
-                          
-      state: deleted     
-      
-# After State:
-# -----------
-
-# vyos@vyos:~$ show configuration commands | match zone-policy
-# set zone-policy zone test interface 'eth3'
-# set zone-policy zone zone1 default-action 'drop'
-# set zone-policy zone zone1 description 'Added zone named zone1'
-# set zone-policy zone zone1 interface 'eth1'
-# set zone-policy zone zone2 description 'Added zone named zone2'
-# set zone-policy zone zone2 interface 'eth2'       
-# vyos@vyos:~$ 
-#
-#
-    # "after": [
-    #     {
-    #         "default_action": "drop",
-    #         "interfaces": [
-    #             "eth3"
-    #         ],
-    #         "name": "test"
-    #     },
-    #     {
-    #         "interfaces": [
-    #             "eth1"
-    #         ],
-    #         "name": "zone1"
-    #     },
-    #     {
-    #         "interfaces": [
-    #             "eth2"
-    #         ],
-    #         "name": "zone2"
-    #     }
-    # ],
-    # "before": [
-    #     {
-    #         "default_action": "drop",
-    #         "interfaces": [
-    #             "eth3"
-    #         ],
-    #         "name": "test"
-    #     },
-    #     {
-    #         "interfaces": [
-    #             "eth1"
-    #         ],
-    #         "name": "zone1"
-    #     },
-    #     {
-    #         "interfaces": [
-    #             "eth4"
-    #         ],
-    #         "name": "zone2"
-    #     }
-    # ],
-    # "changed": true,
-    # "commands": [
-    #     "delete zone-policy zone zone2 interface eth4"       // issue-aj (should have deleted eth2, but deleted eth4)
-    # ],
 
 """
 
