@@ -53,6 +53,7 @@ class Firewall_zones(ResourceModule):
             "description",
             "default_action",
             "from",
+            "remove_zone",
             "local_zone",
         ]
 
@@ -73,6 +74,8 @@ class Firewall_zones(ResourceModule):
         """
         wantd = {entry['name']: entry for entry in self.want}
         haved = {entry['name']: entry for entry in self.have}
+
+        print("wantd >>>> ", wantd, "haved >>> ", haved)
 
         ### commented out following, as we just need wantd configurations to be set,
         ### and no referance with wantd,,, but commenting out following is a problem for
@@ -113,15 +116,18 @@ class Firewall_zones(ResourceModule):
             compval = self._tmplt.get_parser(parser).get("compval")
             if not compval:
                 compval = parser
+
+            print("inside config", "=== compval", compval)
             _inw = get_from_dict(want, compval)
             _inh = get_from_dict(have, compval)
 
             ## If inw is not none, delete the entries. otherwise skip
             if _inw is not None: #and _inw != _inh:
+                print("_inw compare ", _inw)
                 if isinstance(_inw, bool):
                     if _inw is False and _inh is None:
                         continue
-                    self.addcmd(want, parser, not _inw)
+                    self.addcmd(want, parser, _inw) ## Passing _inw instead of 'not _inw'
                 else:
                     self.addcmd(want, parser, True)
             # elif _inw is None and _inh is not None:

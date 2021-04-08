@@ -28,6 +28,7 @@ def _get_parameters(data):
 
 def _tmplt_manage_interfaces(config_data):
     cmd_list = []
+    print("inside rm_templates")
     for interface_name in config_data["interfaces"]:
         command = (
             "zone-policy zone"
@@ -188,6 +189,24 @@ class Firewall_zonesTemplate(NetworkTemplate):
                 }
             },
            "shared": True,
+        },
+        {
+            "name": "remove_zone",
+            "getval": re.compile(
+                r"""
+                ^delete
+                \s+zone-policy
+                \s+zone
+                \s+(?P<name>\S+)
+                *$""",
+                re.VERBOSE,
+            ),
+            "setval": "zone-policy zone {{ name }}",
+            "result": {
+                "{{ name }}": {
+                    "name": "{{ name }}",
+                }
+            },
         },
         {
             "name": "local_zone",

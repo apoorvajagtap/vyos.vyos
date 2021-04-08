@@ -58,6 +58,7 @@ class Firewall_zonesArgs(object):  # pylint: disable=R0903
                     "type": "list",
                 },
                 "local_zone": {"type": "bool"},
+                "remove_zone": {"type": "bool"},
             },
         },
         "state": {

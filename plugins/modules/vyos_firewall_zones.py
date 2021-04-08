@@ -70,7 +70,11 @@ options:
       local_zone:
         description:
           - Zone to be local-zone.
-        type: bool        
+        type: bool
+      remove_zone:        
+        description:
+          - Set to True in order to delete all the configurations specifc to a particular zone
+        type: bool
   state:
     description:
     - The state the configuration should be left in
