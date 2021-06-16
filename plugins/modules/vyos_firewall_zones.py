@@ -67,13 +67,8 @@ options:
       interfaces:
         description:
           - Interface associated with zone.
-        type: dict
-        suboptions:
-          name:
-            description:
-              - Specify the name of the interface.
-            type: str
-            required: True  
+        type: list
+        elements: str
       local_zone:
         description:
           - Zone to be local-zone.

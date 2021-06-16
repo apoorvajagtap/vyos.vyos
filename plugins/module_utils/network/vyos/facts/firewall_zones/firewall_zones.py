@@ -59,11 +59,22 @@ class Firewall_zonesFacts(object):
         objs = []
 
         if not data:
-            data = connection.get()
+            data = connection.get("show configuration commands | match zone-policy")
 
         # parse native config using the Firewall_zones template
         firewall_zones_parser = Firewall_zonesTemplate(lines=data.splitlines())
-        objs = list(firewall_zones_parser.parse().values())
+
+        if firewall_zones_parser.parse().get("firewall_zones"):
+            objs = list(firewall_zones_parser.parse().get("firewall_zones").values())
+
+            # Convert 'from' from dicts of dicts to list of dicts.
+            for item in objs:
+                if item.get("from"):
+                    #print("inside facts ##########3", item.get("from"))
+                    item["from"] = list(item["from"].values())
+
+                if item.get("interfaces"):
+                    item["interfaces"] = list(item["interfaces"].values())
 
         ansible_facts['ansible_network_resources'].pop('firewall_zones', None)
 
