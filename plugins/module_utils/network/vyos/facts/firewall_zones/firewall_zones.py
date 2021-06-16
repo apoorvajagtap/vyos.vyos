@@ -67,12 +67,12 @@ class Firewall_zonesFacts(object):
         if firewall_zones_parser.parse().get("firewall_zones"):
             objs = list(firewall_zones_parser.parse().get("firewall_zones").values())
 
-            # Convert 'from' from dicts of dicts to list of dicts.
             for item in objs:
+                # Convert 'from' from dicts of dicts to list of dicts.
                 if item.get("from"):
-                    #print("inside facts ##########3", item.get("from"))
                     item["from"] = list(item["from"].values())
 
+                # Convert 'interfaces' from dicts of dicts to list of dicts.
                 if item.get("interfaces"):
                     item["interfaces"] = list(item["interfaces"].values())
 

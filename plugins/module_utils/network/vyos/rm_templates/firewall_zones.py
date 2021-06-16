@@ -201,17 +201,19 @@ class Firewall_zonesTemplate(NetworkTemplate):
                 \s+interface
                 \s+(?P<interface_name>\S+)
                 *$""",
-                re.VERBOSE
+                re.VERBOSE,
             ),
             "compval": "interface_name",
-            "setval": "zone-policy zone {{ name }} interface '{{ interface_name }}'",
+            "setval": "zone-policy zone {{ name }} interface {{ interface_name }}",
             "result": {
                 "firewall_zones": {
                     "{{ name }}": {
                         "name": "{{ name }}",
                         "interfaces": {
-                            "name": "{{ interface_name }}",
-                        }
+                            "{{ interface_name }}": {
+                                "name": "{{ interface_name }}",
+                            },
+                        },
                     },
                 }
             },
