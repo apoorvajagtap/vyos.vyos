@@ -191,7 +191,7 @@ class Firewall_zonesTemplate(NetworkTemplate):
             },
         },
         {
-            "name": "interface_name",
+            "name": "interfaces",
             "getval": re.compile(
                 r"""
                 ^set
@@ -199,19 +199,19 @@ class Firewall_zonesTemplate(NetworkTemplate):
                 \s+zone
                 \s+(?P<name>\S+)
                 \s+interface
-                \s+(?P<interface_name>\S+)
+                \s+(?P<interfaces>\S+)
                 *$""",
                 re.VERBOSE,
             ),
             "compval": "interface_name",
-            "setval": "zone-policy zone {{ name }} interface {{ interface_name }}",
+            "setval": "zone-policy zone {{ name }} interface {{ interfaces }}",
             "result": {
                 "firewall_zones": {
                     "{{ name }}": {
                         "name": "{{ name }}",
                         "interfaces": {
-                            "{{ interface_name }}": {
-                                "name": "{{ interface_name }}",
+                            "{{ interfaces }}": {
+                                "name": "{{ interfaces }}",
                             },
                         },
                     },

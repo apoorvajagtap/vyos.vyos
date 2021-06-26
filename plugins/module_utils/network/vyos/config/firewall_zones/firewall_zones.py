@@ -48,6 +48,14 @@ class Firewall_zones(ResourceModule):
             tmplt=Firewall_zonesTemplate(),
         )
         self.parsers = [
+            "name",
+            "default_action",
+            "description",
+            "from_name",
+            "firewall_name",
+            "firewall_v6_name",
+            "interfaces",
+            "local_zone",
         ]
 
     def execute_module(self):
@@ -94,4 +102,5 @@ class Firewall_zones(ResourceModule):
            the `want` and `have` data with the `parsers` defined
            for the Firewall_zones network resource.
         """
+        print("inside _compare >>>>>> ", want, "+++", have)
         self.compare(parsers=self.parsers, want=want, have=have)
