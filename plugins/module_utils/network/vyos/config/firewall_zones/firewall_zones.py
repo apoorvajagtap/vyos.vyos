@@ -73,12 +73,28 @@ class Firewall_zones(ResourceModule):
         """ Generate configuration commands to send based on
             want, have and desired state.
         """
-        wantd = {entry['name']: entry for entry in self.want}
-        haved = {entry['name']: entry for entry in self.have}
+        # wantd = {entry['name']: entry for entry in self.want}
+        # haved = {entry['name']: entry for entry in self.have}
+
+        wantd = {}
+        haved = {}
+        for entry in self.want:
+            wantd.update({entry["name"]: entry})
+        for entry in self.have:
+            haved.update({entry["name"]: entry})
+
+        # turn all lists into dicts prior to merge
+        for entry in wantd, haved:
+            self._fz_dict_to_list(entry)
+
+        print("wantd just before merging >>", wantd)
+        print("haved just before merging >>", wantd)
 
         # if state is merged, merge want onto have and then compare
         if self.state == "merged":
             wantd = dict_merge(haved, wantd)
+
+        print("wantd after merge, >> ", wantd)
 
         # if state is deleted, empty out wantd and set haved to wantd
         if self.state == "deleted":
@@ -104,3 +120,11 @@ class Firewall_zones(ResourceModule):
         """
         print("inside _compare >>>>>> ", want, "+++", have)
         self.compare(parsers=self.parsers, want=want, have=have)
+
+    def _fz_dict_to_list(self, entry):
+        for name, config in iteritems(entry):
+            if "interfaces" in config:
+                int_list = []
+                for int in config["interfaces"]:
+                    int_list.append(int["name"])
+                config["interfaces"] = int_list

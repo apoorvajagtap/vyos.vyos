@@ -19,10 +19,22 @@ from ansible_collections.ansible.netcommon.plugins.module_utils.network.common.n
     NetworkTemplate,
 )
 
+def _tmplt_manage_interfaces(config_data):
+    cmd_list = []
+    print("inside rm_templates")
+    for interface_name in config_data["interfaces"]:
+        command = (
+            "zone-policy zone"
+            + " {name} ".format(**config_data)
+            + "interface {name}".format(name=interface_name)
+        )
+        cmd_list.append(command)
+    return cmd_list
+
 class Firewall_zonesTemplate(NetworkTemplate):
     def __init__(self, lines=None):
         prefix = {"set": "set", "remove": "delete"}
-        super(Firewall_zonesTemplate, self).__init__(lines=lines, tmplt=self)
+        super(Firewall_zonesTemplate, self).__init__(lines=lines, tmplt=self, prefix=prefix)
 
     # fmt: off
     PARSERS = [
@@ -203,8 +215,9 @@ class Firewall_zonesTemplate(NetworkTemplate):
                 *$""",
                 re.VERBOSE,
             ),
-            "compval": "interface_name",
-            "setval": "zone-policy zone {{ name }} interface {{ interfaces }}",
+            "compval": "interfaces",
+            "setval": _tmplt_manage_interfaces,
+            #"setval": "zone-policy zone {{ name }} interface {{ interfaces }}",
             "result": {
                 "firewall_zones": {
                     "{{ name }}": {
