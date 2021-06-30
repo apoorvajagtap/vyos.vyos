@@ -119,15 +119,15 @@ class Firewall_zonesTemplate(NetworkTemplate):
                 *$""",
                 re.VERBOSE
             ),
-            "compval": "from_name",
-            "setval": "zone-policy zone {{ name }} from {{ from_name }}",
+            "compval": "from",
+            "setval": "zone-policy zone {{ name }} from {{ from.from_name.from_name }}",
             "result": {
                 "firewall_zones": {
                     "{{ name }}": {
                         "name": "{{ name }}",
                         "from": {
                             "{{ from_name }}": {
-                                "name": "{{ from_name }}",
+                                "from_name": "{{ from_name }}",
                             },
                         },
                     },
@@ -150,15 +150,15 @@ class Firewall_zonesTemplate(NetworkTemplate):
                 *$""",
                 re.VERBOSE
             ),
-            "compval": "firewall_name",
-            "setval": "zone-policy zone {{ name }} from {{ from_name }} firewall name {{ firewall_name }}",
+            "compval": "from",
+            "setval": "zone-policy zone {{ name }} from {{ from.from_name.from_name }} firewall name {{ from.from_name.firewall.v4_rule_set }}",
             "result": {
                 "firewall_zones": {
                     "{{ name }}": {
                         "name": "{{ name }}",
                         "from": {
                             "{{ from_name }}": {
-                                "name": "{{ from_name }}",
+                                "from_name": "{{ from_name }}",
                                 "firewall": {
                                     "v4_rule_set": "{{ firewall_name }}",
                                 },
@@ -184,15 +184,15 @@ class Firewall_zonesTemplate(NetworkTemplate):
                 *$""",
                 re.VERBOSE
             ),
-            "compval": "firewall_v6_name",
-            "setval": "zone-policy zone {{ name }} from {{ from_name }} firewall ipv6-name {{ firewall_v6_name }}",
+            "compval": "from",
+            "setval": "zone-policy zone {{ name }} from {{ from.from_name.from_name }} firewall ipv6-name {{ from.from_name.firewall.v6_rule_set }}",
             "result": {
                 "firewall_zones": {
                     "{{ name }}": {
                         "name": "{{ name }}",
                         "from": {
                             "{{ from_name }}": {
-                                "name": "{{ from_name }}",
+                                "from_name": "{{ from_name }}",
                                 "firewall": {
                                     "v6_rule_set": "{{ firewall_v6_name }}",
                                 },

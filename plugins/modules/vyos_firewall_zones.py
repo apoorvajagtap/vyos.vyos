@@ -46,7 +46,7 @@ options:
         type: list
         elements: dict
         suboptions:
-          name:
+          from_name:
             description:
               - Zone from which to filter traffic.
             type: str

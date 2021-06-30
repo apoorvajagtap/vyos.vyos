@@ -46,7 +46,7 @@ class Firewall_zonesArgs(object):  # pylint: disable=R0903
                     "type": "list",
                     "elements": "dict",
                     "options": {
-                        "name": {"type": "str", "required": True},
+                        "from_name": {"type": "str", "required": True},
                         "firewall": {
                             "type": "dict",
                             "options": {

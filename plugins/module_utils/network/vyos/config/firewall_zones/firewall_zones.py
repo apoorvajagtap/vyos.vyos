@@ -83,9 +83,9 @@ class Firewall_zones(ResourceModule):
         for entry in self.have:
             haved.update({entry["name"]: entry})
 
-        # turn all lists into dicts prior to merge
+        # lists-dicts coversion prior to merge
         for entry in wantd, haved:
-            self._fz_dict_to_list(entry)
+            self._fz_dict_list(entry)
 
         print("wantd just before merging >>", wantd)
         print("haved just before merging >>", wantd)
@@ -121,10 +121,21 @@ class Firewall_zones(ResourceModule):
         print("inside _compare >>>>>> ", want, "+++", have)
         self.compare(parsers=self.parsers, want=want, have=have)
 
-    def _fz_dict_to_list(self, entry):
+    def _fz_dict_list(self, entry):
         for name, config in iteritems(entry):
             if "interfaces" in config:
                 int_list = []
                 for int in config["interfaces"]:
                     int_list.append(int["name"])
                 config["interfaces"] = int_list
+
+            # convert 'from' from list of dicts to dict of dicts
+            if "from" in config:
+                print("before changes **** ", config["from"])
+                from_dict = {}
+                for ele in config.get("from", []):
+                    print("here>> ", ele)
+                    from_dict.update({"from_name": ele})
+                config["from"] = from_dict
+                print("after changes **** ", config["from"])
+                #self._fz_dict_to_list(config["from"])
